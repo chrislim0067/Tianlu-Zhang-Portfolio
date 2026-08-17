@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": null,
+  "builds": [
+    { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "dist" } }
+  ],
   "cleanUrls": true,
   "trailingSlash": false,
   "redirects": [
@@ -13,19 +13,5 @@
   ],
   "rewrites": [
     { "source": "/work/:slug", "destination": "/work" }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)\.wasm",
-      "headers": [{ "key": "Content-Type", "value": "application/wasm" }]
-    },
-    {
-      "source": "/(.*)\.glb",
-      "headers": [{ "key": "Content-Type", "value": "model/gltf-binary" }]
-    },
-    {
-      "source": "/(_nuxt|webgl|audio|fonts|images)/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]
-    }
   ]
 }
