@@ -771,8 +771,10 @@ function transformNuxtScript(source, fileName) {
       )
       .replace(/\{rel:"icon",type:"image\/png",href:"\/favicon\.png"\}/, '{rel:"icon",type:"image/svg+xml",href:"/favicon.svg"}')
       .replace(/https?:\/\/[a-z0-9.-]+\.prismic\.io\/api\/v2/g, '/cms/api/v2')
-      // Do not install the analytics plugin at all (nothing in the app uses $gtag).
+      // Do not install the analytics plugin at all, and drop the two bootstrap()
+      // calls (preloader mount + click) that would load the tag script.
       .replace(/l\.a\.use\(Me\.b,\{appName:"[^"]*",config:\{id:"[^"]*"\}[\s\S]*?\},t\.router\)/, 'void 0')
+      .replaceAll('Object(Me.a)().then((function(){console.log("GTAG Enabled")}))', 'void 0')
       .replace(/new O\.a\("[a-z0-9]+"\),this\._menuOrder/, 'new O.a("tianlu"),this._menuOrder');
   }
 
@@ -806,6 +808,13 @@ function transformNuxtScript(source, fileName) {
   }
   if (fileName === '939a6db.js') {
     patched = patched
+      // Newer Chrome throws when getTotalLength() runs on a non-rendered SVG
+      // path (the menu line while hidden); a throw here would abort every other
+      // resize listener, so guard it.
+      .replace(
+        'resize:function(){this.lineLength=this.$refs.line.getTotalLength(),',
+        'resize:function(){var line=this.$refs.line;if(!line||!line.isConnected||!line.getClientRects().length)return;this.lineLength=line.getTotalLength(),'
+      )
       .replace(
         /components:\{[A-Za-z0-9]+:P\.a,[A-Za-z0-9]+:\$\.a,[A-Za-z0-9]+:j\.a,[A-Za-z0-9]+:T\.a,[A-Za-z0-9]+:M\.a\}/,
         'components:{PillarOne:P.a,PillarTwo:$.a,PillarThree:j.a,PillarFour:T.a,PillarFive:M.a}'
