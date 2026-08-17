@@ -5,7 +5,6 @@
   "description": "Tianlu Zhang portfolio",
   "scripts": {
     "dev": "node server.js",
-    "start": "node server.js",
     "bake": "node scripts/bake.js",
     "build": "node scripts/build-static.js",
     "smoke": "node scripts/smoke-test.js"
