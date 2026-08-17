@@ -6,7 +6,7 @@
   var englishCases = [
     {
       slug: 'ai-ml-platform-at-production-scale',
-      image: '/images/work/ai-ml-platform-at-production-scale.jpg',
+      image: '/images/work/ai-ml-platform-at-production-scale.jpg?v=1',
       title: 'AI/ML Platform at Production Scale',
       category: 'ai-platforms',
       short:
@@ -18,7 +18,7 @@
     },
     {
       slug: 'llm-inference-optimization',
-      image: '/images/work/llm-inference-optimization.jpg',
+      image: '/images/work/llm-inference-optimization.jpg?v=1',
       title: 'LLM Inference Optimization',
       category: 'llm-systems',
       short:
@@ -30,7 +30,7 @@
     },
     {
       slug: 'distributed-fine-tuning-infrastructure',
-      image: '/images/work/distributed-fine-tuning-infrastructure.jpg',
+      image: '/images/work/distributed-fine-tuning-infrastructure.jpg?v=1',
       title: 'Distributed Fine-Tuning Infrastructure',
       category: 'llm-systems',
       short:
@@ -42,7 +42,7 @@
     },
     {
       slug: 'embedding-and-semantic-retrieval',
-      image: '/images/work/embedding-and-semantic-retrieval.jpg',
+      image: '/images/work/embedding-and-semantic-retrieval.jpg?v=1',
       title: 'Embedding and Semantic Retrieval',
       category: 'llm-systems',
       short:
@@ -54,7 +54,7 @@
     },
     {
       slug: 'production-mlops-platform',
-      image: '/images/work/production-mlops-platform.jpg',
+      image: '/images/work/production-mlops-platform.jpg?v=1',
       title: 'Production MLOps Platform',
       category: 'ai-platforms',
       short:
@@ -66,7 +66,7 @@
     },
     {
       slug: 'high-throughput-distributed-data-platform',
-      image: '/images/work/high-throughput-distributed-data-platform.jpg',
+      image: '/images/work/high-throughput-distributed-data-platform.jpg?v=1',
       title: 'High-Throughput Distributed Data Platform',
       category: 'distributed-systems',
       short:
@@ -78,7 +78,7 @@
     },
     {
       slug: 'apple-maps-engineering-leadership',
-      image: '/images/work/apple-maps-engineering-leadership.jpg',
+      image: '/images/work/apple-maps-engineering-leadership.jpg?v=1',
       title: 'Apple Maps Engineering Leadership',
       category: 'leadership',
       short:
@@ -90,7 +90,7 @@
     },
     {
       slug: 'ml-performance-engineering',
-      image: '/images/work/ml-performance-engineering.jpg',
+      image: '/images/work/ml-performance-engineering.jpg?v=1',
       title: 'ML Performance Engineering',
       category: 'distributed-systems',
       short:

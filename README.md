@@ -42,3 +42,11 @@ With the server running:
 ```powershell
 npm run smoke
 ```
+
+## Deploy (static)
+
+The site needs no server in production. `npm run build` writes a fully static
+copy to `dist/` (one HTML file per route + assets). `vercel.json` is included:
+Vercel runs the build, serves `dist/`, and handles the `/en/*` → `/*` redirects.
+Set `SITE_URL` (e.g. `https://tianlu-zhang-portfolio.vercel.app`) for `og:url`
+metadata; on Vercel it falls back to the project's production URL automatically.

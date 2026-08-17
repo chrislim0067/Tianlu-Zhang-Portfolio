@@ -771,7 +771,8 @@ function transformNuxtScript(source, fileName) {
       )
       .replace(/\{rel:"icon",type:"image\/png",href:"\/favicon\.png"\}/, '{rel:"icon",type:"image/svg+xml",href:"/favicon.svg"}')
       .replace(/https?:\/\/[a-z0-9.-]+\.prismic\.io\/api\/v2/g, '/cms/api/v2')
-      .replace(/appName:"[^"]*",config:\{id:"G-[A-Z0-9]+"\},enabled:!0/, 'appName:"tianlu-portfolio",config:{id:"G-XXXXXXXXXX"},enabled:!1')
+      // Do not install the analytics plugin at all (nothing in the app uses $gtag).
+      .replace(/l\.a\.use\(Me\.b,\{appName:"[^"]*",config:\{id:"[^"]*"\}[\s\S]*?\},t\.router\)/, 'void 0')
       .replace(/new O\.a\("[a-z0-9]+"\),this\._menuOrder/, 'new O.a("tianlu"),this._menuOrder');
   }
 
