@@ -168,17 +168,59 @@ function characterSpans(value, attributes = '') {
   ).join('');
 }
 
+// Rewrites the per-character <span> children of a container with new text.
+function replaceCharSpans(container, text) {
+  const template = container.match(/<span[^>]*>/);
+  if (!template) return container;
+  const open = container.slice(0, container.indexOf(template[0]));
+  const close = container.slice(container.lastIndexOf('</span>') + '</span>'.length);
+  const spans = Array.from(text, (character) =>
+    `${template[0]}${character === ' ' ? '' : escapeHtml(character)}</span>`
+  ).join('');
+  return `${open}${spans}${close}`;
+}
+
 function replaceHomeContent(source, locale) {
   const home = PORTFOLIO_CONTENT.home[locale];
+  let statementIndex = 0;
   return source
     .replace(
-      /(<section class="section-home[\s\S]*?<h1 class="heading"[^>]*>)[\s\S]*?(<\/h1>)/,
+      /(<div class="section-home[\s\S]*?<h1 class="heading"[^>]*>)[\s\S]*?(<\/h1>)/,
       `$1\n            ${escapeHtml(home.summary)}\n        $2`
     )
     .replace(
       /(<span class="the-end-title"[^>]*>)[\s\S]*?(<\/span>)/,
       `$1${escapeHtml(home.endScreen)}$2`
+    )
+    // Home interaction statements (one .interaction block per statement).
+    .replace(
+      /(<div class="interaction"[\s\S]*?<div class="content"[^>]*>)([\s\S]*?)(<\/div>\s*<\/div>\s*<\/div>)/g,
+      (match, start, chars, end) => {
+        const statement = home.statements[statementIndex++];
+        return statement ? `${start}${replaceCharSpans(chars, statement)}${end}` : match;
+      }
+    )
+    // "Click to …" tutorial hint.
+    .replace(
+      /(<div class="tutorial"[^>]*>\s*<div class="content"[^>]*>)([\s\S]*?)(<\/div>\s*<\/div>)/,
+      (match, start, chars, end) => `${start}${replaceCharSpans(chars, home.interaction)}${end}`
     );
+}
+
+// Preloader logo words (present on every page).
+function replacePreloaderName(source) {
+  let wordIndex = 0;
+  const words = ['Tianlu', 'Zhang'];
+  return source.replace(
+    /(<div class="logo-animation[\s\S]*?<div class="name"[^>]*>)([\s\S]*?)(<\/div>\s*<\/div>\s*<div class="cursor-intro")/,
+    (match, start, body, end) => {
+      const rewritten = body.replace(
+        /(<div class="word"[^>]*>)([\s\S]*?)(<\/div>)/g,
+        (word, open, chars, close) => `${open}${replaceCharSpans(chars, words[wordIndex++] || '')}${close}`
+      );
+      return `${start}${rewritten}${end}`;
+    }
+  );
 }
 
 function replaceSectionIntro(source, summary, paragraphs) {
@@ -704,7 +746,7 @@ function transformHtml(source, pathname, requestUrl) {
   const isHome = /^\/?$/.test(pathname);
   const isAbout = /^\/about\/?$/.test(pathname);
   const isWork = /^\/work(?:\/|$)/.test(pathname);
-  let pageSource = applyLocalBranding(source);
+  let pageSource = replacePreloaderName(applyLocalBranding(source));
   if (isHome) pageSource = replaceHomeContent(pageSource, locale);
   if (isAbout) pageSource = replaceAboutContent(pageSource, locale);
   if (isWork) pageSource = replaceWorkContent(pageSource, locale, pathname);
