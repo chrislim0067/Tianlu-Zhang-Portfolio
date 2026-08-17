@@ -1,8 +1,9 @@
 // Copies the shared site assets from the repo root into public/ (gitignored).
 const fs = require('fs');
 const path = require('path');
-const root = path.resolve(__dirname, '..');
-const pub = path.join(__dirname, 'public');
+const root = path.resolve(__dirname, '..', '..');
+const app = path.resolve(__dirname, '..');
+const pub = path.join(app, 'public');
 fs.rmSync(pub, { recursive: true, force: true });
 fs.mkdirSync(pub, { recursive: true });
 for (const entry of ['fonts', 'images', 'audio', 'webgl', 'favicon.svg']) {
