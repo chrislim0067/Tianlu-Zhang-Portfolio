@@ -1,0 +1,15 @@
+{
+  "name": "tianlu-zhang-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tianlu Zhang portfolio",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "bake": "node scripts/bake.js",
+    "smoke": "node scripts/smoke-test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
