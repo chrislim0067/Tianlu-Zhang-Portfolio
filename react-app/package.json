@@ -1,10 +1,13 @@
 {
-  "name": "react-app",
+  "name": "tianlu-zhang-portfolio-react",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "sync-assets": "node scripts/sync-assets.cjs",
+    "predev": "npm run sync-assets",
     "dev": "vite",
+    "prebuild": "npm run sync-assets",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"
