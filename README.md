@@ -4,10 +4,10 @@ Tianlu Zhang's portfolio: an immersive React + WebGL site (four 3D landscapes,
 ambient audio, cinematic transitions) driven entirely by local content — no CMS,
 no third-party analytics.
 
-**The site is the React app in ** (see ).
-Vercel builds it with the root . The files below at the repo root
+**The site is the React app in `react-app/`** (see `react-app/README.md`).
+Vercel builds it with the root `npm run build`. The files below at the repo root
 are the shared assets and copy the React app consumes, plus the earlier
-static/legacy tooling (, ) kept for reference.
+static/legacy tooling (`npm run dev`, `npm run build:legacy`) kept for reference.
 
 ## Layout
 
