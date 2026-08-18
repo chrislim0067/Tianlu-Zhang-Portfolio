@@ -1,9 +1,13 @@
 # Tianlu Zhang portfolio
 
-Tianlu Zhang's portfolio site: an immersive Nuxt/WebGL shell (four 3D landscapes,
-ambient audio, cinematic transitions) driven entirely by local content. There is
-no CMS and no third-party analytics — every page, payload and bundle is served
-from this folder.
+Tianlu Zhang's portfolio: an immersive React + WebGL site (four 3D landscapes,
+ambient audio, cinematic transitions) driven entirely by local content — no CMS,
+no third-party analytics.
+
+**The site is the React app in ** (see ).
+Vercel builds it with the root . The files below at the repo root
+are the shared assets and copy the React app consumes, plus the earlier
+static/legacy tooling (, ) kept for reference.
 
 ## Layout
 
@@ -43,10 +47,8 @@ With the server running:
 npm run smoke
 ```
 
-## Deploy (static)
+## Deploy
 
-The site needs no server in production. `npm run build` writes a fully static
-copy to `dist/` (one HTML file per route + assets). `vercel.json` is included:
-Vercel runs the build, serves `dist/`, and handles the `/en/*` → `/*` redirects.
-Set `SITE_URL` (e.g. `https://tianlu-zhang-portfolio.vercel.app`) for `og:url`
-metadata; on Vercel it falls back to the project's production URL automatically.
+`npm run build` (root) installs and builds `react-app/` into `react-app/dist`;
+`vercel.json` serves that folder with SPA rewrites and the `/en/*` → `/*`
+redirects. `npm run build:legacy` still produces the older static export in `dist/`.

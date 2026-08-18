@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "node server.js",
     "bake": "node scripts/bake.js",
-    "build": "node scripts/build-static.js",
+    "build:legacy": "node scripts/build-static.js",
+    "build": "npm --prefix react-app ci --no-audit --no-fund && npm --prefix react-app run build",
     "smoke": "node scripts/smoke-test.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20.19"
   }
 }

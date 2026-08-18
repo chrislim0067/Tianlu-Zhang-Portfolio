@@ -1,10 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "builds": [
-    { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "dist" } }
+    { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "react-app/dist" } }
   ],
-  "cleanUrls": true,
-  "trailingSlash": false,
   "redirects": [
     { "source": "/en", "destination": "/", "permanent": false },
     { "source": "/en/:path*", "destination": "/:path*", "permanent": false },
@@ -12,6 +10,6 @@
     { "source": "/fr/:path*", "destination": "/:path*", "permanent": false }
   ],
   "rewrites": [
-    { "source": "/work/:slug", "destination": "/work" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
