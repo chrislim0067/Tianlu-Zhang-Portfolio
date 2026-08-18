@@ -1,122 +1,48 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect, useRef, useState } from 'react';
+import { bootRuntime } from './legacy/boot';
 
-function App() {
-  const [count, setCount] = useState(0)
+// Spike: boot the shared runtime, load resources, set up the engine and show the Home landscape.
+export default function App() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [status, setStatus] = useState('booting');
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const runtime = await bootRuntime((path) => console.log('navigate', path));
+      const { store } = runtime.legacy;
+      setStatus('detecting gpu');
+      const gpu = await runtime.legacy.detectGpu({ benchmarksURL: '/webgl/misc/benchmarks' });
+      let tier = gpu.tier;
+      if (gpu.gpu === 'apple m1 (Apple M1)') tier = 3;
+      store.dispatch('device/setGpuTier', tier);
+      store.dispatch('preloader/setLoadingStarted');
+      if (cancelled) return;
+      runtime.createEngine(canvasRef.current!);
+      setStatus('loading resources');
+      runtime.resourceLoader.addEventListener('complete', () => {
+        store.dispatch('preloader/setLoadingCompleted');
+        setStatus('setting up engine');
+        runtime.setupEngine(() => {
+          setStatus('engine ready');
+          runtime.root.webglApp.viewManager.show('Home');
+          store.dispatch('preloader/setCompleted');
+          store.dispatch('scroll/unlock');
+          setStatus('home shown');
+          (window as any).__runtime = runtime;
+        });
+      });
+      runtime.resourceLoader.preload();
+    })().catch((error) => { console.error(error); setStatus('error: ' + error.message); });
+    return () => { cancelled = true; };
+  }, []);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <div>
+      <div>
+        <canvas ref={canvasRef} className="background" />
+      </div>
+      <div style={{ position: 'fixed', top: 8, left: 8, color: '#fff', font: '12px monospace', zIndex: 10 }} data-status>{status}</div>
+    </div>
+  );
 }
-
-export default App
