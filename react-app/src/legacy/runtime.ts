@@ -22,7 +22,7 @@ declare global {
 }
 
 const RUNTIME_CHUNK = '27e0753.js';
-const MODULE_CHUNKS = ['1c3739f.js', '4a4ccfc.js', 'b30f9f2.js', 'acefdce.js'];
+const MODULE_CHUNKS = ['1c3739f.js', '4a4ccfc.js', 'b30f9f2.js', 'acefdce.js', '939a6db.js', '4755683.js'];
 const NUXT_ENTRY_MODULE = 364;
 
 let pending: Promise<LegacyRequire> | null = null;

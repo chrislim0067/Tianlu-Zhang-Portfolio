@@ -36,8 +36,6 @@ const STORE_FILES: Array<[number, string]> = [
   [517, 'webgl/views/actions.js'], [518, 'webgl/views/getters.js'], [519, 'webgl/views/mutations.js'], [520, 'webgl/views/state.js']
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyStore = any;
 
 export interface LegacyStore {
   state: Record<string, any>;
@@ -175,11 +173,15 @@ export function loadLegacy(): Promise<Legacy> {
     Vue.use(Vuex);
     const store = new Vuex.Store(Object.assign({ strict: false }, buildStoreOptions(require)));
 
+    const gsap = findGsap(require(ID.gsap));
+    // Plugins the original entry registered (CustomEase, InertiaPlugin).
+    gsap.registerPlugin(require(150).a, require(205).a);
+
     const legacy: Legacy = {
       require,
       Vue,
       Vuex,
-      gsap: findGsap(require(ID.gsap)),
+      gsap,
       THREE: require(ID.three),
       Engine: pickDefault(require(ID.engine)),
       ResourceLoader: findResourceLoader(require(ID.resourceLoader)),

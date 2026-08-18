@@ -1,48 +1,74 @@
-import { useEffect, useRef, useState } from 'react';
-import { bootRuntime } from './legacy/boot';
+import { useEffect, useRef } from 'react';
+import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom';
+import { RuntimeProvider, sv, useGetter, useLegacy } from './runtime/context';
+import { Background, useAudioController } from './components/Background';
+import { TheMenu } from './components/TheMenu';
+import { ButtonMute, type ButtonMuteHandle } from './components/ButtonMute';
+import { Preloader } from './components/Preloader';
+import { PageOutlet, type PageComponent } from './components/PageOutlet';
+import { pages } from './pages';
 
-// Spike: boot the shared runtime, load resources, set up the engine and show the Home landscape.
-export default function App() {
+function resolvePage(path: string): { Component: PageComponent; params: Record<string, string> } {
+  const clean = path.replace(/\/$/, '') || '/';
+  if (clean === '/') return { Component: pages.Home, params: {} };
+  if (clean === '/about') return { Component: pages.About, params: {} };
+  if (clean === '/work') return { Component: pages.Work, params: {} };
+  const project = clean.match(/^\/work\/([^/]+)$/);
+  if (project) return { Component: pages.Project, params: { slug: project[1] } };
+  return { Component: pages.Home, params: {} };
+}
+
+/** Default layout (scope 6d28008c). */
+function Layout() {
+  const { root } = useLegacy();
+  const location = useLocation();
+  const isCompleted = useGetter<boolean>('preloader/isCompleted');
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [status, setStatus] = useState('booting');
+  const buttonMute = useRef<ButtonMuteHandle>(null);
+  const isHome = (location.pathname.replace(/\/$/, '') || '/') === '/';
+  useAudioController(isHome);
 
+  // watch isCompleted -> transitionIn (mute button)
+  const wasCompleted = useRef(isCompleted);
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const runtime = await bootRuntime((path) => console.log('navigate', path));
-      const { store } = runtime.legacy;
-      setStatus('detecting gpu');
-      const gpu = await runtime.legacy.detectGpu({ benchmarksURL: '/webgl/misc/benchmarks' });
-      let tier = gpu.tier;
-      if (gpu.gpu === 'apple m1 (Apple M1)') tier = 3;
-      store.dispatch('device/setGpuTier', tier);
-      store.dispatch('preloader/setLoadingStarted');
-      if (cancelled) return;
-      runtime.createEngine(canvasRef.current!);
-      setStatus('loading resources');
-      runtime.resourceLoader.addEventListener('complete', () => {
-        store.dispatch('preloader/setLoadingCompleted');
-        setStatus('setting up engine');
-        runtime.setupEngine(() => {
-          setStatus('engine ready');
-          runtime.root.webglApp.viewManager.show('Home');
-          store.dispatch('preloader/setCompleted');
-          store.dispatch('scroll/unlock');
-          setStatus('home shown');
-          (window as any).__runtime = runtime;
-        });
-      });
-      runtime.resourceLoader.preload();
-    })().catch((error) => { console.error(error); setStatus('error: ' + error.message); });
-    return () => { cancelled = true; };
-  }, []);
+    if (isCompleted && !wasCompleted.current) buttonMute.current?.transitionIn();
+    wasCompleted.current = isCompleted;
+  }, [isCompleted]);
+
+  // keep the engine's route info current
+  useEffect(() => {
+    root.$route = { ...root.$route, fullPath: location.pathname };
+  }, [location.pathname, root]);
 
   return (
-    <div>
-      <div>
-        <canvas ref={canvasRef} className="background" />
-      </div>
-      <div style={{ position: 'fixed', top: 8, left: 8, color: '#fff', font: '12px monospace', zIndex: 10 }} data-status>{status}</div>
+    <div {...sv('6d28008c')}>
+      <Background ref={canvasRef} />
+      <PageOutlet resolve={resolvePage} />
+      <TheMenu />
+      <ButtonMute ref={buttonMute} />
+      {!isCompleted && <Preloader canvasRef={canvasRef} />}
+      <div className="audio-controller" {...sv('5d87bb12', '6d28008c')} />
     </div>
+  );
+}
+
+function Shell() {
+  const navigate = useNavigate();
+  return (
+    <RuntimeProvider navigate={(path) => navigate(path)}>
+      <div id="__nuxt">
+        <div id="__layout">
+          <Layout />
+        </div>
+      </div>
+    </RuntimeProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Shell />
+    </BrowserRouter>
   );
 }
