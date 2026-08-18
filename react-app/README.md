@@ -1,32 +1,36 @@
-# React + TypeScript + Vite
+# Tianlu Zhang portfolio — React app
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React 19 + TypeScript + Vite rebuild of the portfolio. Every page, component,
+transition and interaction is React code in `src/`; the visual result is the
+same as the original site.
 
-Currently, two official plugins are available:
+## Architecture
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **UI (React)** — `src/components` (menu, menu/sound buttons, preloader, scroll
+  containers, page outlet), `src/pages` (home, about, work layout + project),
+  `src/content/portfolio.ts` (all copy, generated from `../portfolio-content.js`),
+  `src/legacy.css` (the site's original stylesheet, extracted verbatim; components
+  keep the original class names and `data-v-*` scope attributes so it applies as-is).
+- **3D landscapes (vendored engine)** — the original WebGL engine (four scenes,
+  post-processing, camera paths, work-slider planes) is a self-contained compiled
+  module inside the original bundles. `src/legacy/runtime.ts` loads those bundle
+  files (`public/_nuxt/*.js`, copied from the repo root) without booting the old
+  app, and `src/legacy/index.ts` exposes the engine, GSAP (one shared ticker),
+  the resource loader/manifests, the audio manager and the original Vuex store
+  modules to React. `src/legacy/boot.ts` runs the same start-up sequence the old
+  app did (context, device, loaders, engine). React talks to the engine through
+  the small API the pages always used (`viewManager.show/hide`, `landscapeManager`,
+  `postProcessing.passes`, `ui.createSlider/createImage`, `showMenu/hideMenu`).
+- Shared state between React and the engine is the original store
+  (`useGetter('menu/isOpen')`, `store.dispatch('scroll/lock')`, …).
 
-## React Compiler
+## Commands
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm run dev      # syncs assets from the repo root, serves on http://127.0.0.1:5180
+npm run build    # syncs assets, type-checks and builds to dist/
+npm run preview  # serves the production build on http://127.0.0.1:5181
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Content changes: edit `../portfolio-content.js`, then `npm run sync-assets`
+(also run automatically by dev/build) to regenerate `src/content/portfolio.ts`.

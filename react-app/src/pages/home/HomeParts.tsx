@@ -145,8 +145,9 @@ export const SectionHome = forwardRef<SectionHomeHandle, { title: string; endScr
 
   useEffect(() => store.watch((state: any) => state.webgl.views.home.isAvailable, (value: boolean) => setAvailable(value)), [store]);
 
+  const activeUi = () => engine()?.viewManager?.active?.ui ?? null;
   const setupWebGLText = () => {
-    engine().viewManager.active.ui.text.setContent(title);
+    activeUi()?.text.setContent(title);
   };
   useEffect(() => {
     if (isWebGLViewAvailable) setupWebGLText();
@@ -187,27 +188,35 @@ export const SectionHome = forwardRef<SectionHomeHandle, { title: string; endScr
     transitionIn() {
       s.timelineOut?.kill();
       s.timelineIn = new gsap.timeline();
-      s.timelineIn.call(() => engine().viewManager.active.ui.enable(), null, 0);
-      s.timelineIn.add(engine().viewManager.active.ui.text.transitionIn(), 0);
+      const ui = activeUi();
+      if (ui) {
+        s.timelineIn.call(() => ui.enable(), null, 0);
+        s.timelineIn.add(ui.text.transitionIn(), 0);
+      }
       return s.timelineIn;
     },
     transitionOut() {
       s.timelineIn?.kill();
-      s.timelineOut = new gsap.timeline({ onComplete: () => engine().viewManager.active.ui.disable() });
-      s.timelineOut.add(engine().viewManager.active.ui.text.transitionOut(), 0);
+      const ui = activeUi();
+      s.timelineOut = new gsap.timeline({ onComplete: () => ui?.disable() });
+      if (ui) s.timelineOut.add(ui.text.transitionOut(), 0);
       return s.timelineOut;
     },
     show() {
       s.timelineOut?.kill();
       s.timelineIn = new gsap.timeline();
-      s.timelineIn.call(() => engine().viewManager.active.ui.enable(), null, 0);
-      s.timelineIn.add(engine().viewManager.active.ui.text.show(), 0);
+      const ui = activeUi();
+      if (ui) {
+        s.timelineIn.call(() => ui.enable(), null, 0);
+        s.timelineIn.add(ui.text.show(), 0);
+      }
       return s.timelineIn;
     },
     hide() {
       s.timelineIn?.kill();
-      s.timelineOut = new gsap.timeline({ onComplete: () => engine().viewManager.active.ui.disable() });
-      s.timelineOut.add(engine().viewManager.active.ui.text.hide(), 0);
+      const ui = activeUi();
+      s.timelineOut = new gsap.timeline({ onComplete: () => ui?.disable() });
+      if (ui) s.timelineOut.add(ui.text.hide(), 0);
       return s.timelineOut;
     }
   }), [gsap, engine, s]);

@@ -5,17 +5,18 @@ import { Background, useAudioController } from './components/Background';
 import { TheMenu } from './components/TheMenu';
 import { ButtonMute, type ButtonMuteHandle } from './components/ButtonMute';
 import { Preloader } from './components/Preloader';
-import { PageOutlet, type PageComponent } from './components/PageOutlet';
+import { PageOutlet, type ResolvedPage } from './components/PageOutlet';
 import { pages } from './pages';
+import { routeInfoFromPath } from './legacy/boot';
+import { applySeo } from './runtime/seo';
 
-function resolvePage(path: string): { Component: PageComponent; params: Record<string, string> } {
+function resolvePage(path: string): ResolvedPage {
   const clean = path.replace(/\/$/, '') || '/';
-  if (clean === '/') return { Component: pages.Home, params: {} };
-  if (clean === '/about') return { Component: pages.About, params: {} };
-  if (clean === '/work') return { Component: pages.Work, params: {} };
+  if (clean === '/about') return { key: 'about', Component: pages.About, params: {} };
+  if (clean === '/work') return { key: 'work', Component: pages.Work, params: {} };
   const project = clean.match(/^\/work\/([^/]+)$/);
-  if (project) return { Component: pages.Project, params: { slug: project[1] } };
-  return { Component: pages.Home, params: {} };
+  if (project) return { key: 'work', Component: pages.Work, params: { slug: project[1] } };
+  return { key: 'home', Component: pages.Home, params: {} };
 }
 
 /** Default layout (scope 6d28008c). */
@@ -35,9 +36,10 @@ function Layout() {
     wasCompleted.current = isCompleted;
   }, [isCompleted]);
 
-  // keep the engine's route info current
+  // keep the engine's route info current + head tags (original page head())
   useEffect(() => {
-    root.$route = { ...root.$route, fullPath: location.pathname };
+    root.$route = routeInfoFromPath(location.pathname);
+    applySeo(location.pathname);
   }, [location.pathname, root]);
 
   return (

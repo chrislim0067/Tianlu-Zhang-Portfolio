@@ -85,7 +85,7 @@ export const HomePage = forwardRef<PageHandle, { params: Record<string, string> 
       const timeline = new gsap.timeline({ onComplete: done ?? undefined });
       if (routes.isLangSwitch) {
         if (store.getters['home/isMenuTriggeredWithScrollTriggered']) scrollContainer.current?.animateIn();
-      } else timeline.call(() => engine().viewManager.show('Home'), null, 0);
+      } else timeline.call(() => engine()?.viewManager?.show('Home'), null, 0);
       timeline.add(showArrow(), 0);
       if (cursors.current) timeline.add(cursors.current.transitionIn(), 0);
       if (buttonMenu.current) timeline.add(buttonMenu.current.transitionIn(), 0);
@@ -97,10 +97,11 @@ export const HomePage = forwardRef<PageHandle, { params: Record<string, string> 
       timeline.add(hideArrow(), 0);
       timeline.add(sectionHome.current!.transitionOut(), 0);
       timeline.add(buttonMenu.current!.transitionOut(), 0);
-      timeline.to(engine().landscapeManager.active.camera, { duration: 1.5, scrollProgress: 0, ease: 'sine.inOut' }, 0);
+      const camera = engine()?.landscapeManager?.active?.camera;
+      if (camera) timeline.to(camera, { duration: 1.5, scrollProgress: 0, ease: 'sine.inOut' }, 0);
       timeline.add(cursors.current!.transitionOut(), 0);
       timeline.add(tutorial.current!.hide(), 0);
-      if (!routes.isLangSwitch) timeline.call(() => engine().viewManager.hide('Home'), null, 0.3);
+      if (!routes.isLangSwitch) timeline.call(() => engine()?.viewManager?.hide('Home'), null, 0.3);
     }
   }));
 
