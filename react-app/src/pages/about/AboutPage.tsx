@@ -163,8 +163,12 @@ const SectionCompanies = forwardRef<HTMLElement, { data: readonly Expertise[]; s
     scrollTriggerProgressPosition: 1,
     onScrollThrough: ({ position }) => {
       if (breakpointRef.current !== 'large') return;
-      // scrollThroughLarge
-      for (const trigger of s.triggers) if (position + trigger.offset > trigger.position) setActive(trigger.index);
+      // scrollThroughLarge — resolve the last passed trigger first (Vue batched the
+      // repeated assignments into one watcher call; do the same here so the tweens
+      // are not restarted on every scroll event)
+      let next: number | null = s.activeIndex;
+      for (const trigger of s.triggers) if (position + trigger.offset > trigger.position) next = trigger.index;
+      if (next !== null) setActive(next);
       if (s.triggers.length > 0) {
         if (position + s.triggers[0].offset < s.triggers[0].position) {
           if (!s.isVisible) return;
