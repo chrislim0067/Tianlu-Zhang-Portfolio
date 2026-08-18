@@ -227,18 +227,15 @@ function replaceSectionIntro(source, summary, paragraphs) {
   return source.replace(
     /<section class="section-intro[\s\S]*?<\/section>/,
     (section) => {
-      let paragraphIndex = 0;
       return section
         .replace(
-          /(<h1 class="heading"[^>]*>)[\s\S]*?(<\/h1>)/,
+          /(<(?:h1 class="heading"[^>]*|div class="heading"[^>]*>\s*<h1)>)[\s\S]*?(<\/h1>)/,
           `$1\n            ${escapeHtml(summary)}\n        $2`
         )
         .replace(
-          /(<div class="paragraph"[^>]*>\s*<p>)[\s\S]*?(<\/p>)/g,
-          (match, start, end) => {
-            const paragraph = paragraphs[paragraphIndex++];
-            return paragraph ? `${start}${escapeHtml(paragraph)}${end}` : match;
-          }
+          /(<div class="paragraph"[^>]*>)[\s\S]*?(<\/div>)/,
+          (match, start, end) =>
+            `${start}${paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}${end}`
         );
     }
   );
@@ -306,7 +303,7 @@ function replaceContactMarkup(source, locale) {
           )}$3`
         )
         .replace(
-          /(<span class="contact-label is-offset"[^>]*>)[\s\S]*?(<\/span>)/,
+          /(<span class="contact-label(?: is-offset)?"[^>]*>)[\s\S]*?(<\/span>)/,
           `$1${escapeHtml(contact.label)}$2`
         );
     }
@@ -712,6 +709,11 @@ function applyLocalBranding(source) {
     branded = branded.replaceAll(
       menuLetters(original, 'chars'),
       menuLetters(replacement, 'chars')
+    );
+    // Plain-text page titles ("About us" heading on the About page).
+    branded = branded.replace(
+      new RegExp(`(<div class="page-title"[^>]*>\\s*)${original}(\\s*<\\/div>)`, 'g'),
+      `$1${replacement}$2`
     );
   }
 
