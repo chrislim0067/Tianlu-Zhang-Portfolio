@@ -354,6 +354,12 @@ export const AboutPage = forwardRef<PageHandle, { params: Record<string, string>
         <SectionIntro ref={sectionIntro} title={about.summary} paragraphs={about.paragraphs} scope="deb2de74" />
         <SectionCompanies ref={sectionCompanies} data={about.expertise} scope="deb2de74" />
         <SectionContact ref={sectionContact} data={content.contact.en} scope="deb2de74" />
+        {/* SectionCredits (scope 03ffcf42): empty in the original too, kept for the page's bottom spacing */}
+        <section className="section-credits" {...sv('03ffcf42', 'deb2de74')}>
+          <div className="container container-max-width" {...sv('03ffcf42')}>
+            <div className="row" {...sv('03ffcf42')}><span className="credits" {...sv('03ffcf42')} /></div>
+          </div>
+        </section>
         <ButtonHome ref={buttonHome} scope="deb2de74" />
         <ButtonMenu ref={buttonMenu} scope="deb2de74" />
       </ScrollContainer>

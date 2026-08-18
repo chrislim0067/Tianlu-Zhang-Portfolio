@@ -48,16 +48,18 @@ export const WorkLayout = forwardRef<PageHandle, { params: Record<string, string
   // Nested child transitions (enterWork / leaveWork with mode out-in).
   const targetSlug = params.slug ?? null;
   useEffect(() => {
-    if (targetSlug === displayedSlug && pendingSlug.current === undefined) return;
     if (leaving.current) {
+      // any route change during the leave (even back to the leaving slug) becomes the next target
       pendingSlug.current = targetSlug;
       return;
     }
+    if (targetSlug === displayedSlug && pendingSlug.current === undefined) return;
     const swap = () => {
       leaving.current = false;
       const next = pendingSlug.current !== undefined ? pendingSlug.current : targetSlug;
       pendingSlug.current = undefined;
-      setDisplayedSlug(next);
+      if (next === displayedSlug && next && child.current) child.current.transitionIn(null, routesSnapshot());
+      else setDisplayedSlug(next);
     };
     if (displayedSlug && child.current) {
       leaving.current = true;

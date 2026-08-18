@@ -47,8 +47,11 @@ export const SectionProjects = forwardRef<SectionProjectsHandle, { initialTag: s
   }, [displayedTag, tags, require, s]);
 
   // out-in swap of the slider on tag change
+  const latestTag = useRef(activeTag);
   useWatch(activeTag, (tag) => {
-    const timeline = new gsap.timeline({ onComplete: () => setDisplayedTag(tag) });
+    latestTag.current = tag;
+    // like <transition mode="out-in">, only the latest requested tag is mounted once the leave finishes
+    const timeline = new gsap.timeline({ onComplete: () => { if (latestTag.current === tag) setDisplayedTag(tag); } });
     if (slider.current) timeline.add(slider.current.transitionOut());
   });
   const mountedTag = useRef(initialTag);

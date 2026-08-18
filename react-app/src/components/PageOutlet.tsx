@@ -1,4 +1,4 @@
-import { createElement, forwardRef, useEffect, useRef, useState, type ForwardRefExoticComponent, type RefAttributes } from 'react';
+import { createElement, forwardRef, useEffect, useLayoutEffect, useRef, useState, type ForwardRefExoticComponent, type RefAttributes } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLegacy } from '../runtime/context';
 import { routeInfoFromPath } from '../legacy/boot';
@@ -20,6 +20,8 @@ export type PageComponent = ForwardRefExoticComponent<{ params: Record<string, s
 
 interface Entry {
   key: string;
+  /** bumped on every out-in swap so the page remounts like Vue's <transition mode="out-in"> */
+  instance: number;
   path: string;
   Component: PageComponent;
   params: Record<string, string>;
@@ -46,7 +48,7 @@ export function PageOutlet({ resolve }: { resolve: (path: string) => ResolvedPag
   const [entry, setEntry] = useState<Entry>(() => {
     const info = routeInfoFromPath(location.pathname);
     const { key, Component, params } = resolve(location.pathname);
-    return { key, path: info.path, Component, params };
+    return { key, instance: 0, path: info.path, Component, params };
   });
   const pending = useRef<Entry | null>(null);
   const leaving = useRef(false);
@@ -68,10 +70,16 @@ export function PageOutlet({ resolve }: { resolve: (path: string) => ResolvedPag
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Keep the engine's route info current before any child effect reads it (Vue updates $route first).
+  useLayoutEffect(() => {
+    root.$route = routeInfoFromPath(location.pathname);
+  }, [location.pathname, root]);
+
   // Route change: leave current page, then swap.
   useEffect(() => {
     const info = routeInfoFromPath(location.pathname);
-    if (info.path === entry.path && !pending.current) return;
+    // (while a page is leaving, coming back to its own path is a new target too — Vue remounts it)
+    if (info.path === entry.path && !pending.current && !leaving.current) return;
     // layout watch $route -> router/setCurrent + router/setPrevious
     store.dispatch('router/setPrevious', store.state.router.current);
     store.dispatch('router/setCurrent', routeObject(location.pathname));
@@ -79,10 +87,10 @@ export function PageOutlet({ resolve }: { resolve: (path: string) => ResolvedPag
     const resolved = resolve(location.pathname);
     if (resolved.key === entry.key && !leaving.current) {
       // Same page component (nested route change, e.g. /work -> /work/:slug): re-render with new params.
-      setEntry({ key: resolved.key, path: info.path, Component: resolved.Component, params: resolved.params });
+      setEntry({ key: resolved.key, instance: entry.instance, path: info.path, Component: resolved.Component, params: resolved.params });
       return;
     }
-    const next: Entry = { key: resolved.key, path: info.path, Component: resolved.Component, params: resolved.params };
+    const next: Entry = { key: resolved.key, instance: entry.instance + 1, path: info.path, Component: resolved.Component, params: resolved.params };
     if (leaving.current) {
       pending.current = next;
       return;
@@ -93,7 +101,7 @@ export function PageOutlet({ resolve }: { resolve: (path: string) => ResolvedPag
       leaving.current = false;
       const latest = pending.current || next;
       pending.current = null;
-      setEntry(latest);
+      setEntry({ ...latest, instance: entry.instance + 1 });
     };
     const page = pageRef.current;
     if (page && page.transitionOut) {
@@ -110,8 +118,9 @@ export function PageOutlet({ resolve }: { resolve: (path: string) => ResolvedPag
   // After a page mounts: beforeEnter (transitionInit) then enter (transitionIn) if there is a previous route.
   const mountedKey = useRef<string | null>(null);
   useEffect(() => {
-    if (mountedKey.current === entry.key) return;
-    mountedKey.current = entry.key;
+    const mountKey = entry.key + ':' + entry.instance;
+    if (mountedKey.current === mountKey) return;
+    mountedKey.current = mountKey;
     root.$route = routeInfoFromPath(entry.path);
     const page = pageRef.current;
     const routes = routesSnapshot();
@@ -122,7 +131,7 @@ export function PageOutlet({ resolve }: { resolve: (path: string) => ResolvedPag
       console.error('page transitionIn failed', error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entry.key]);
+  }, [entry.key, entry.instance]);
 
   // Initial page: transitionIn when the preloader completes (page mixin watch isCompleted).
   useEffect(() => {
@@ -134,7 +143,7 @@ export function PageOutlet({ resolve }: { resolve: (path: string) => ResolvedPag
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return createElement(entry.Component, { key: entry.key, ref: pageRef, params: entry.params });
+  return createElement(entry.Component, { key: entry.key + ':' + entry.instance, ref: pageRef, params: entry.params });
 }
 
 export const definePage = <P extends { params: Record<string, string> }>(component: ForwardRefExoticComponent<P & RefAttributes<PageHandle>>) => component as unknown as PageComponent;

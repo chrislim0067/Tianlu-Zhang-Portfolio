@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import { localeCopy, sv, useGetter, useLegacy } from '../runtime/context';
 
 export interface ButtonMuteHandle {
@@ -14,8 +14,8 @@ export const ButtonMute = forwardRef<ButtonMuteHandle, object>(function ButtonMu
   const { gsap, math, easing, windowObserver, audio } = useLegacy();
   const breakpoint = useGetter<string>('device/breakpoint');
   const isTouch = useGetter<boolean>('device/isTouch');
-  const [circleSize, setCircleSize] = useState(50);
-  const [lineSize, setLineSize] = useState(15);
+  const [circleSize, setCircleSize] = useState(() => CIRCLE_SIZES[breakpoint] ?? 10);
+  const [lineSize, setLineSize] = useState(() => LINE_SIZES[breakpoint] ?? 13);
   const radius = circleSize / 2;
   const el = useRef<HTMLButtonElement>(null);
   const label = useRef<HTMLDivElement>(null);
@@ -48,19 +48,21 @@ export const ButtonMute = forwardRef<ButtonMuteHandle, object>(function ButtonMu
     getBounds();
     setCircleSize(CIRCLE_SIZES[breakpoint] ?? 10);
     setLineSize(LINE_SIZES[breakpoint] ?? 13);
-    requestAnimationFrame(() => {
-      if (!circle.current || !line.current || !circleAnimated.current) return;
-      s.circleLength = circle.current.getTotalLength() + 1;
-      circle.current.style.strokeDasharray = String(s.circleLength);
-      circle.current.style.strokeDashoffset = String(s.circleLength);
-      circleAnimated.current.style.strokeDasharray = String(s.circleLength);
-      circleAnimated.current.style.strokeDashoffset = String(s.circleLength);
-      circle.current.style.strokeDashoffset = String(s.isReady ? 0 : s.circleLength);
-      s.lineLength = line.current.getTotalLength() + 1;
-      line.current.style.strokeDasharray = String(s.lineLength);
-      line.current.style.strokeDashoffset = String(s.isMuted ? 0 : -s.lineLength);
-    });
   }, [breakpoint, getBounds, s]);
+
+  // Measure once the resized circle/line are in the DOM (the original did this in $nextTick).
+  useLayoutEffect(() => {
+    if (!circle.current || !line.current || !circleAnimated.current) return;
+    s.circleLength = circle.current.getTotalLength() + 1;
+    circle.current.style.strokeDasharray = String(s.circleLength);
+    circle.current.style.strokeDashoffset = String(s.circleLength);
+    circleAnimated.current.style.strokeDasharray = String(s.circleLength);
+    circleAnimated.current.style.strokeDashoffset = String(s.circleLength);
+    circle.current.style.strokeDashoffset = String(s.isReady ? 0 : s.circleLength);
+    s.lineLength = line.current.getTotalLength() + 1;
+    line.current.style.strokeDasharray = String(s.lineLength);
+    line.current.style.strokeDashoffset = String(s.isMuted ? 0 : -s.lineLength);
+  }, [circleSize, lineSize, s]);
 
   useEffect(() => {
     resize();

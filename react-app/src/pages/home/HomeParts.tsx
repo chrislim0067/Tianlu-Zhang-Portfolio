@@ -14,6 +14,7 @@ export const Tutorial = forwardRef<TutorialHandle, { data: string; scope: string
   const el = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
   const s = useRef({ timelineShow: null as any, infiniteTimelineShow: null as any, timelineHide: null as any }).current;
+  useEffect(() => () => { s.infiniteTimelineShow?.kill(); s.timelineShow?.kill(); s.timelineHide?.kill(); }, [s]);
   useImperativeHandle(ref, () => ({
     get el() { return el.current; },
     show() {

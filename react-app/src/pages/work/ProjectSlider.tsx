@@ -326,6 +326,9 @@ export const ProjectSlider = forwardRef<ProjectSliderHandle, Props>(function Pro
 
     return () => {
       unwatch();
+      // a slider unmounted while still shown (never transitioned out) must not leave its slides in the scene
+      // (skip when the engine already destroyed it, e.g. viewManager.hide('Work') — slides are null then)
+      if (s.isReady && s.webglSlider && s.webglSlider.slides) { s.isReady = false; s.webglSlider.hide(); }
       s.dragManager.dispose();
       s.progressDragManager.dispose();
       gsap.ticker.remove(tick);

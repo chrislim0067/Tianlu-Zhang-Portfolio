@@ -126,6 +126,7 @@ const SectionProject = forwardRef<SectionProjectHandle, { data: ProjectData; sco
   const heading = useRef<HTMLHeadingElement>(null);
   const images = useRef<ImageHandle[]>([]);
   const s = useRef({ targetPosition: 0 }).current;
+  const sectionEl = useRef<HTMLElement>(null);
   const list = [data.main_image, ...data.images.map((entry) => entry.image)].filter((image) => image && image.url);
 
   const media = breakpoint === 'large' ? 'large' : 'small';
@@ -147,7 +148,14 @@ const SectionProject = forwardRef<SectionProjectHandle, { data: ProjectData; sco
     };
     getTargetPosition();
     windowObserver.addEventListener('resize', getTargetPosition);
-    return () => windowObserver.removeEventListener('resize', getTargetPosition);
+    // The engine's slide click handler reads `.js-section-project.__vue__.targetPosition`
+    // when the tapped slide is the project already open (scrolls back to the heading).
+    const section = sectionEl.current as (HTMLElement & { __vue__?: unknown }) | null;
+    if (section) section.__vue__ = { get targetPosition() { return s.targetPosition; } };
+    return () => {
+      windowObserver.removeEventListener('resize', getTargetPosition);
+      if (section) delete section.__vue__;
+    };
   }, [windowObserver, require, s]);
 
   useWatch(isMenuOpen, (open) => {
@@ -172,7 +180,7 @@ const SectionProject = forwardRef<SectionProjectHandle, { data: ProjectData; sco
 
   const attrs = sv('7a643e9c');
   return (
-    <section className="section-project js-section-project" {...sv('7a643e9c', scope)}>
+    <section ref={sectionEl} className="section-project js-section-project" {...sv('7a643e9c', scope)}>
       <div className="container" {...attrs}>
         <h1 ref={heading} className="heading" {...attrs}>{data.title}</h1>
         <div className="description" {...attrs}>
@@ -303,9 +311,12 @@ export const ProjectPage = forwardRef<ProjectChildHandle, { data: ProjectData; s
         timeline.to(el.current, { duration: 1, alpha: 1, ease: 'sine.inOut' }, 0);
       }
     },
-    transitionOut(done, routes) {
+    transitionOut(rawDone, routes) {
       const scroll = require(129).a;
       const timeline = new gsap.timeline();
+      // Vue's leave `done` is once-guarded; the original calls it twice when already at the top.
+      let called = false;
+      const done = rawDone ? () => { if (called) return; called = true; rawDone(); } : null;
       const goingToWork = routes.current && String(routes.current.name).split('___')[0] === 'work';
       if (scroll.position <= 0.01 * windowObserver.height && done) timeline.call(done, null);
       timeline.to(el.current, { duration: 0.5, alpha: 0, ease: 'sine.inOut' }, 0);

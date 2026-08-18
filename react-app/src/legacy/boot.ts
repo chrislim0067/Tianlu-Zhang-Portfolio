@@ -4,6 +4,9 @@
  * ran across its Nuxt plugins, layout and preloader.
  */
 import { loadLegacy, type Legacy } from './index';
+import { content } from '../content/portfolio';
+
+const isKnownProject = (slug: string) => content.work.en.cases.some((entry) => entry.slug === slug);
 
 export interface RouteInfo {
   fullPath: string;
@@ -34,8 +37,10 @@ export interface Runtime {
 export function routeInfoFromPath(pathname: string): RouteInfo {
   const path = pathname.replace(/\/$/, '') || '/';
   const project = path.match(/^\/work\/([^/]+)$/);
-  const name = path === '/' ? 'index' : path === '/about' ? 'about' : path === '/work' ? 'work' : project ? 'work-slug' : 'index';
-  return { fullPath: pathname, path, name, params: project ? { slug: project[1] } : {} };
+  // unknown slugs are the work overview (validate() failed in the original; the static site redirected to /work)
+  const known = project ? isKnownProject(project[1]) : false;
+  const name = path === '/' ? 'index' : path === '/about' ? 'about' : path === '/work' ? 'work' : known ? 'work-slug' : project ? 'work' : 'index';
+  return { fullPath: pathname, path, name, params: known ? { slug: project![1] } : {} };
 }
 
 let runtimePromise: Promise<Runtime> | null = null;
